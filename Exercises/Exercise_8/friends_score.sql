@@ -15,27 +15,33 @@ insert into person(PersonID,Name ,Score) values('3','Devis','27');
 insert into person(PersonID,Name ,Score) values('4','Tara','45');
 insert into person(PersonID,Name ,Score) values('5','John','63');
 
-WITH friends_score AS (
-  SELECT
-    f.pid,
-    f.fid,
-    p.score
-  FROM friend f
-  INNER JOIN person p ON f.fid = p.PersonID 
-), 
-pid_name AS (
-  SELECT
-    p.PersonID,
-    p.Name -- Removed trailing comma here
-  FROM person p
-) -- Added missing comma here
-SELECT
-  f.pid AS pid,
-  SUM(f.score) AS total_friend_score,
-  COUNT(f.fid) AS no_of_friends, -- Changed to fid to count actual friends
-  n.Name AS person_name
-  
-FROM friends_score f
-INNER JOIN pid_name n ON f.pid = n.PersonID -- Join happens BEFORE Group By
-GROUP BY f.pid, n.Name
-HAVING SUM(f.score) > 100;
+WITH friends_score as (
+  select
+  f.pid,
+  f.fid,
+  p.score
+  from friend f
+  INNER JOIN person p
+  ON f.fid = p.PersonID 
+), pid_name as (
+  select
+  f.pid,
+  p.Name
+  from friend f
+  INNER JOIN person p
+  ON f.pid = p.PersonID 
+),
+final_table as (
+  select
+  f.pid as personID,
+  n.Name as name,
+  COUNT(f.pid) as no_friends,
+  SUM(f.score) as total_friendscore
+  FROM friends_score f
+  INNER JOIN pid_name n
+  ON f.pid = n.pid 
+  GROUP BY f.pid, n.Name
+  HAVING SUM(f.score) > 100
+)
+
+select * from final_table;
